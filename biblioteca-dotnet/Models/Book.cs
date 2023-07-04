@@ -8,6 +8,8 @@
 
         public string? DateWritten { get; set; }
 
+        public int Rented { get; set; }
+
         public Publisher Publisher { get; set; }
 
         public int PublisherId { get; set; }
