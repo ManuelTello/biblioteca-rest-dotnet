@@ -25,24 +25,37 @@ namespace biblioteca_dotnet.Repositories
             return book_fetched;
         }
 
-        
-        public async Task<List<Book>> FetchBooksByFilter(string title)
+        public async Task<List<Book>> FetchBooksByFilter(string title, int skip, int totake)
         {
-            var a = this.Context.Books.FromSqlRaw("select * from dbo.Books")
+            List<Book> books_fetched = await this.Context.Books
+                .Where(b => EF.Functions.Like(b.Title, $"%{title}%"))
                 .Include(b => b.Authors)
                 .Include(b => b.Publisher)
-                .Include(b => b.Genres);
-            foreach(var b in a)
-            {
-                var afsdaf = b;
-            }
-            List<Book> books_fetched = await this.Context.Books
-                .Where(b => EF.Functions.Like(b.Title, title))
+                .Include(b => b.Genres)
+                .Skip(skip)
+                .Take(totake)
+                .ToListAsync();
+            return books_fetched;
+        }
+
+        public async Task<long> FetchAmountOfFiltered(string title)
+        {
+            long amount_of_books = await this.Context.Books
+                .Where(b => EF.Functions.Like(b.Title, $"%{title}%"))
+                .CountAsync();
+            return amount_of_books;
+        }
+
+        public async Task<List<Book>> FetchTopMostRented()
+        {
+            List<Book> most_rented_books = await this.Context.Books
                 .Include(b => b.Authors)
                 .Include(b => b.Genres)
                 .Include(b => b.Publisher)
+                .OrderByDescending(b => b.Rented)
+                .Take(10)
                 .ToListAsync();
-            return books_fetched;
+            return most_rented_books;
         }
     }
 }

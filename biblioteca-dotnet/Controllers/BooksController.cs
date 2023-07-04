@@ -7,41 +7,68 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace biblioteca_dotnet.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api")]
     [ApiController]
     public class BooksController : ControllerBase
     {
         private readonly BookService Service;
-    
-        public BooksController(DataContext context)
+        private readonly string Enviorment;
+
+        public BooksController(DataContext context, IWebHostEnvironment env)
         {
-            this.Service = new BookService(context);
+            this.Enviorment = env.EnvironmentName;
+            this.Service = new BookService(context, Enviorment);
         }
 
         [HttpGet]
-        [Route("/[action]/{id}")]
+        [Route("[controller]/[action]/{id}")]
         public async Task<IActionResult> SearchById(int id)
         {
-            Response<BookDTO> response = await this.Service.FetchBookById(id);
+            Response<BookDTO> response = await this.Service.FetchById(id);
             switch (response.StatusCode)
             {
                 case 200:
                     return Ok(response);
                 case 404:
                     return NotFound(response);
-                case 500:
-                    return StatusCode(500, response);
                 default:
-                    return StatusCode(500);
+                    return StatusCode(500, response);
             }
         }
 
         [HttpGet]
-        [Route("/[action]")]
-        public async Task<IActionResult> SearchFilter([FromQuery] string title)
+        [Route("[controller]/[action]")]
+        public async Task<IActionResult> SearchByFilter(
+            [FromQuery] string title,
+            [FromQuery] int skip = 1,
+            [FromQuery] int totake = 10)
         {
-            Response<BookDTO> response = await this.Service.FetchByFilter(title);
-            return Ok(response);
+            Response<BookDTO> response = await this.Service.FetchByFilter(title, skip, totake);
+            switch (response.StatusCode)
+            {
+                case 200:
+                    return Ok(response);
+                case 404:
+                    return NotFound(response);
+                default:
+                    return StatusCode(500, response);
+            }
+        }
+
+        [HttpGet]
+        [Route("[controller]/[action]")]
+        public async Task<IActionResult> MostRentedBooks()
+        {
+            Response<BookDTO> response = await this.Service.FetchMostRented();
+            switch (response.StatusCode)
+            {
+                case 200:
+                    return Ok(response);
+                case 404:
+                    return NotFound(response);
+                default:
+                    return StatusCode(500, response);
+            }
         }
     }
 }
