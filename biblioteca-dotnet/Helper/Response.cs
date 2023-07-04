@@ -7,5 +7,11 @@
         public  int? StatusCode { get; set; }
 
         public string? InfoMessage { get; set; }
+
+        public string? PreviousPage { get; set; }
+
+        public string? NextPage { get; set; }
+
+        public int? Page { get; set; }
     }
 }
