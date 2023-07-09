@@ -1,4 +1,6 @@
-﻿namespace biblioteca_dotnet.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace biblioteca_dotnet.Models
 {
     public class Book
     {

@@ -2,7 +2,6 @@
 using biblioteca_dotnet.Dto;
 using biblioteca_dotnet.Helper;
 using biblioteca_dotnet.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace biblioteca_dotnet.Controllers
@@ -40,10 +39,13 @@ namespace biblioteca_dotnet.Controllers
         [Route("[controller]/[action]")]
         public async Task<IActionResult> SearchByFilter(
             [FromQuery] string title,
-            [FromQuery] int skip = 1,
-            [FromQuery] int totake = 10)
+            [FromQuery] int page = 1,
+            [FromQuery] int take = 10,
+            [FromQuery] string? author = null,
+            [FromQuery] string? genre = null,
+            [FromQuery] string? publisher = null)
         {
-            Response<BookDTO> response = await this.Service.FetchByFilter(title, skip, totake);
+            Response<BookDTO> response = await this.Service.FetchByFilter(title, page, take, author, genre, publisher);
             switch (response.StatusCode)
             {
                 case 200:
