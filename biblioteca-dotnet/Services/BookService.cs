@@ -5,7 +5,6 @@ using biblioteca_dotnet.Models;
 using biblioteca_dotnet.Repositories;
 using biblioteca_dotnet.Lib;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc.TagHelpers;
 
 namespace biblioteca_dotnet.Services
 {
@@ -60,53 +59,49 @@ namespace biblioteca_dotnet.Services
             try
             {
                 List<Book> books_fetched = await this.Repository.FetchBooksByFilter(title, page - 1, take);
+                List<Book> books_filtered = books_fetched.ToList();
 
-                // Capaz cambiarlo por una lista KEY-VALUE es mejor
-                if( authors_query != null || genres_query != null || publisher != null)
+                if(authors_query != null)
                 {
-                    List<Book> books_filtered = books_fetched.ToList();
-
-                    foreach (Book book in books_fetched)
+                    foreach(Book book in books_fetched)
                     {
-
-                        if (authors_query != null)
+                        List<string> query_cleaned = QueryFilter.CleanAndStrip(authors_query);
+                        bool authors_exists = Common.ContainsAuthors(book.Authors, query_cleaned);
+                        if(!authors_exists)
                         {
-                            List<string> authors_query_cleaned = QueryFilter.CleanAndStripAlphaNumeric(authors_query);
-                            List<bool> applies = new List<bool>();
-                            foreach (string author in authors_query_cleaned)
-                            {
-                                applies.Add(book.Authors.Any(a => a.AuthorName == author));
-                            }
-                            if (books_filtered.Contains(book) && applies.Contains(false))
-                            {
+                            if (books_filtered.Contains(book))
                                 books_filtered.Remove(book);
-                            }
-                        }
-                        if (genres_query != null)
-                        {
-                            List<string> genres_query_cleaned = QueryFilter.CleanAndStripAlphaNumeric(genres_query);
-                            List<bool> applies = new List<bool>();
-                            foreach (string genre in genres_query_cleaned)
-                            {
-                                applies.Add(book.Genres.Any(a => a.GenreName == genre));
-                            }
-                            if (books_filtered.Contains(book) && applies.Contains(false))
-                            {
-                                books_filtered.Remove(book);
-                            }
-                        }
-                        if (publisher != null)
-                        {
-                            string publisher_query_cleaned = QueryFilter.CleanString(publisher);
-
-                            if (book.Publisher.PublisherName != publisher_query_cleaned && books_filtered.Contains(book))
-                            {
-                                books_filtered.Remove(book);
-                            }
                         }
                     }
-                    books_fetched = books_filtered;
                 }
+
+                if(genres_query != null)
+                {
+                    foreach(Book book in books_fetched)
+                    {
+                        List<string> query_cleaned = QueryFilter.CleanAndStrip(genres_query);
+                        bool genres_exists = Common.ContainsGenres(book.Genres, query_cleaned);
+                        if (!genres_exists) 
+                        { 
+                            if (books_filtered.Contains(book))
+                                books_filtered.Remove(book);
+                        }
+                    }
+                }
+
+                if(publisher != null)
+                {
+                    foreach(Book book in books_fetched)
+                    {
+                        string query_cleaned = QueryFilter.CleanString(publisher);
+                        bool publisher_exist = book.Publisher.PublisherName == publisher ? true : false;
+                        if(!publisher_exist)
+                        {
+                            if(books_filtered.Contains(book))
+                                books_filtered.Remove(book);
+                        }
+                    }
+                } 
                 
                 long amount_of_books = await this.Repository.FetchAmountOfFiltered(title);
                 long max_amount_of_books = 1;
@@ -118,7 +113,7 @@ namespace biblioteca_dotnet.Services
 
                 Response<BookDTO> response = new Response<BookDTO>()
                 {
-                    Data = Mapper.LEntityToDto(books_fetched),
+                    Data = Mapper.LEntityToDto(books_filtered),
                     StatusCode = 200,
                     Page = page,
                     PreviousPage = page - 1 == 0 ? null : $"/api/Books/SearchByFilter?title={title}&skip={page - 1}&totake={take}",
