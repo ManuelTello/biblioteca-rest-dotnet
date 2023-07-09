@@ -11,7 +11,7 @@ namespace biblioteca_dotnet.Lib
             return query_trimmed;
         }
 
-        public static List<string> CleanAndStripAlphaNumeric(string query)
+        public static List<string> CleanAndStrip(string query)
         {
             string query_trimmed = QueryFilter.CleanString(query);
             List<string> query_filtered = query_trimmed.Split("#").ToList();
