@@ -12,6 +12,8 @@
 
         public string? NextPage { get; set; }
 
-        public int? Page { get; set; }
+        public long? Page { get; set; }
+
+        public long? MaxAmountOfPages { get; set; }
     }
 }
