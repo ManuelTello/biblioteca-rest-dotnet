@@ -23,11 +23,13 @@ namespace biblioteca_dotnet.Lib
 
             BookDTO book_dto = new BookDTO()
             {
+                Id = book_entity.BookId,
                 Title = book_entity.Title,
                 DateWritten = book_entity.DateWritten,
                 Publisher = book_entity.Publisher.PublisherName,
                 Authors = authors,
-                Genres = genres
+                Genres = genres,
+                Rented = book_entity.Rented
             };
 
             return book_dto;
@@ -75,7 +77,8 @@ namespace biblioteca_dotnet.Lib
                 DateWritten = book_dto.DateWritten,
                 Publisher = new Publisher() { PublisherName = book_dto.Publisher},
                 Authors = authors,
-                Genres = genres
+                Genres = genres,
+                Rented = book_dto.Rented
             };
 
             return book_entity;
