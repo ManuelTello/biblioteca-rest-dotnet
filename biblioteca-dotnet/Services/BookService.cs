@@ -11,6 +11,7 @@ namespace biblioteca_dotnet.Services
     public class BookService
     {
         private readonly BookRepository Repository;
+
         private readonly string Enviorment;
 
         public BookService(DataContext context, string env)
@@ -53,56 +54,61 @@ namespace biblioteca_dotnet.Services
             }
         }
 
-        public async Task<Response<BookDTO>> FetchByFilter(
-            string title, int page, int take, string? authors_query, string? genres_query, string? publisher)
+        public async Task<Response<BookDTO>> FetchByFilter(string query, string title)
         {
             try
             {
-                List<Book> books_fetched = await this.Repository.FetchBooksByFilter(title, page - 1, take);
+                QueryModel query_model = QueryOperations.DeserializeQuery(query);
+                int page = query_model.Page;
+                int take = query_model.Take;
+                List<Book> books_fetched = await this.Repository.FetchBooksByFilter(query_model.Title, page - 1, take);
                 List<Book> books_filtered = books_fetched.ToList();
-
-                if(authors_query != null)
+                
+                if(query_model.Authors != null)
                 {
                     foreach(Book book in books_fetched)
                     {
-                        List<string> query_cleaned = QueryFilter.CleanAndStrip(authors_query);
-                        bool authors_exists = Common.ContainsAuthors(book.Authors, query_cleaned);
+                        bool authors_exists = Common.ContainsAuthors(book.Authors, query_model.Authors);
                         if(!authors_exists)
                         {
                             if (books_filtered.Contains(book))
+                            {
                                 books_filtered.Remove(book);
+                            }
                         }
                     }
                 }
-
-                if(genres_query != null)
+                
+                if(query_model.Genres != null)
                 {
                     foreach(Book book in books_fetched)
                     {
-                        List<string> query_cleaned = QueryFilter.CleanAndStrip(genres_query);
-                        bool genres_exists = Common.ContainsGenres(book.Genres, query_cleaned);
+                        bool genres_exists = Common.ContainsGenres(book.Genres, query_model.Genres);
                         if (!genres_exists) 
                         { 
                             if (books_filtered.Contains(book))
+                            {
                                 books_filtered.Remove(book);
+                            }
+                        }
+                    }
+                }
+                
+                if(query_model.Publisher != null)
+                {
+                    foreach(Book book in books_fetched)
+                    {
+                        bool publisher_exist = book.Publisher.PublisherName == query_model.Publisher ? true : false;
+                        if(!publisher_exist)
+                        {
+                            if(books_filtered.Contains(book))
+                            {
+                                books_filtered.Remove(book);
+                            }
                         }
                     }
                 }
 
-                if(publisher != null)
-                {
-                    foreach(Book book in books_fetched)
-                    {
-                        string query_cleaned = QueryFilter.CleanString(publisher);
-                        bool publisher_exist = book.Publisher.PublisherName == publisher ? true : false;
-                        if(!publisher_exist)
-                        {
-                            if(books_filtered.Contains(book))
-                                books_filtered.Remove(book);
-                        }
-                    }
-                } 
-                
                 long amount_of_books = await this.Repository.FetchAmountOfFiltered(title);
                 long max_amount_of_books = 1;
 

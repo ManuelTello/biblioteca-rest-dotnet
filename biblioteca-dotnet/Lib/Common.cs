@@ -1,4 +1,5 @@
 ﻿using biblioteca_dotnet.Models;
+using biblioteca_dotnet.Helper;
 
 namespace biblioteca_dotnet.Lib
 {
@@ -45,6 +46,13 @@ namespace biblioteca_dotnet.Lib
                 }
             }
             return true;
+        }
+
+        public static DateTime SerializeToDate(List<int>tvalues)
+        {
+            DateTime date_serialized = new DateTime(tvalues[0], tvalues[1], tvalues[2]);
+
+            return date_serialized;
         }
     }
 }
